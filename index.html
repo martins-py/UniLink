@@ -1115,24 +1115,37 @@ async function register() {
     allowance_amount: parseFloat(document.getElementById("reg-allowance-amount").value) || 0,
     allowance_date: document.getElementById("reg-allowance-date").value,
   };
-  const res = await fetch(`${API}/register`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(body),
-  });
-  const data = await res.json();
+  let res, data;
+  try {
+    res = await fetch(`${API}/register`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+    });
+    data = await res.json();
+  } catch (err) {
+    errorEl.innerText = "Couldn't reach the server. If the app was idle, it may still be waking up, wait a few seconds and try again.";
+    return;
+  }
   if (!res.ok) {
     errorEl.innerText = data.error;
     return;
   }
 
   // Auto-login right after registering, then go to dashboard
-  const loginRes = await fetch(`${API}/login`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ email, password }),
-  });
-  const loginData = await loginRes.json();
+  let loginRes, loginData;
+  try {
+    loginRes = await fetch(`${API}/login`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email, password }),
+    });
+    loginData = await loginRes.json();
+  } catch (err) {
+    // Registration itself worked, just show the login screen so they can sign in manually
+    showLogin();
+    return;
+  }
   if (!loginRes.ok) {
     // Registration worked but auto-login failed for some reason — fall back to login screen
     showLogin();
@@ -1145,18 +1158,26 @@ async function register() {
 }
 
 async function login() {
+  const errorEl = document.getElementById("login-error");
+  errorEl.innerText = "";
   const body = {
     email: document.getElementById("login-email").value,
     password: document.getElementById("login-password").value,
   };
-  const res = await fetch(`${API}/login`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(body),
-  });
-  const data = await res.json();
+  let res, data;
+  try {
+    res = await fetch(`${API}/login`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+    });
+    data = await res.json();
+  } catch (err) {
+    errorEl.innerText = "Couldn't reach the server. If the app was idle, it may still be waking up, wait a few seconds and try again.";
+    return;
+  }
   if (!res.ok) {
-    document.getElementById("login-error").innerText = data.error;
+    errorEl.innerText = data.error;
     return;
   }
   setIdentity(data.name);
